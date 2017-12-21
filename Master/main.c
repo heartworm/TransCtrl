@@ -149,12 +149,14 @@ void shift() {
 
 void setSolenoids(enum Gear gear) {
     PORTD = (PORTD & ~(_BV(PIN_A) | _BV(PIN_B))) | ((0x03 & (SOLENOID_MASK >> (gear*2))) << PIN_A);
+    DDRD = (DDRD & ~(_BV(PIN_A) | _BV(PIN_B))) | ((0x03 & (SOLENOID_MASK >> (gear*2))) << PIN_A);
 }
 
 void setClutchDuty(float duty) {
-    //TODO: set clutch pwm on timer2 from 0-255
+    //there's enough leakage current through the pin that if it's not put into high impedance mode, 
+    //the mosfet turns partially on at 0 duty!
     if (duty == 0) {
-      DDRB &= ~(_BV(PIN_SLU));
+      DDRB &= ~(_BV(PIN_SLU)); 
     } else {
       DDRB |= _BV(PIN_SLU);
     }
