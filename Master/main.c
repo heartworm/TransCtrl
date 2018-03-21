@@ -1,9 +1,9 @@
 #define F_CPU 8000000UL
 
 #define SOLENOID_MASK 0b00101101
-#define SHIFT_DELAY 2000 //milliseconds
+#define SHIFT_DELAY 500 //milliseconds
 #define CLUTCH_ENGAGE_DELAY 500 //milliseconds
-#define CLUTCH_RELEASE_DELAY 2000 //milliseconds
+#define CLUTCH_RELEASE_DELAY 500 //milliseconds
 #define CLUTCH_DUTY 0.6f //float
 #define BAUD 9600                                   // define baud
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)            // set baud rate value for UBRR
@@ -111,7 +111,11 @@ bool isEnabled() {
 }
 
 void shift() {
-    if (!isEnabled()) {
+    if (!isEnabled() || desiredState.gear == GEAR_FIRST) { 
+        //there is no lockup supported in first gear
+        //if the controller is not enabled, switching to it with the lockup on
+        //would result in a simultaneous shift and lockup, making a loud bang and being
+        //hard on the driveline. 
         desiredState.clutch = false;
     }
 
@@ -132,7 +136,6 @@ void shift() {
             } else {
               setTimeout(CLUTCH_RELEASE_DELAY, true);
             }
-            // desiredState.clutch = !desiredState.clutch;
           }
         }
     }
@@ -174,10 +177,9 @@ float getTimeoutProgress() {
 void trySendStatus() {
     if (UCSR0A & _BV(UDRE0)) {
       uint8_t packet = 0x00;
-      packet |= 0x03 & (uint8_t) currentState.gear;
-      packet |= 0x04 & (currentState.clutch << 2);
+      packet |= 0x03 & (uint8_t) desiredState.gear;
+      packet |= 0x04 & (desiredState.clutch << 2);
       packet |= 0x08 & (isEnabled() << 3);
-
       UDR0 = packet;
     }
 }
@@ -196,7 +198,7 @@ int main() {
     initSolenoids();
     initClutchPwm();
     initUart();
-    while(1) {
+    while (true) {
       recvCommand();
       shift();
       trySendStatus();
