@@ -2,9 +2,9 @@
 
 #define SOLENOID_MASK 0b00101101
 #define SHIFT_DELAY 2000 //milliseconds
-#define CLUTCH_ENGAGE_DELAY 2000 //milliseconds
+#define CLUTCH_ENGAGE_DELAY 500 //milliseconds
 #define CLUTCH_RELEASE_DELAY 2000 //milliseconds
-#define CLUTCH_DUTY 0.5f //float
+#define CLUTCH_DUTY 0.6f //float
 #define BAUD 9600                                   // define baud
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)            // set baud rate value for UBRR
   
